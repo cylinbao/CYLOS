@@ -1,12 +1,16 @@
 #include <kernel/trap.h>
 #include <inc/mmu.h>
 #include <inc/x86.h>
+#include <inc/kbd.h>
+#include <inc/timer.h>
 
 /* For debugging, so print_trapframe can distinguish between printing
  * a saved trapframe and printing the current trapframe and print some
  * additional information in the latter case.
  */
 static struct Trapframe *last_tf;
+extern void irq_timer();
+extern void irq_kbd();
 
 /* TODO: You should declare an interrupt descriptor table.
  *       In x86, there are at most 256 it.
@@ -15,7 +19,8 @@ static struct Trapframe *last_tf;
  *       Interrupt descriptor table must be built at run time because shifted
  *       function addresses can't be represented in relocation records.
  */
-
+struct Gatedesc idt[256];
+struct Pseudodesc idt_pd; 
 
 /* For debugging */
 static const char *trapname(int trapno)
@@ -117,9 +122,17 @@ trap_dispatch(struct Trapframe *tf)
    *       We prepared the keyboard handler and timer handler for you
    *       already. Please reference in kernel/kbd.c and kernel/timer.c
    */
-
-	// Unexpected trap: The user process or the kernel has a bug.
-	print_trapframe(tf);
+	switch(tf->tf_trapno){     
+		case IRQ_OFFSET + IRQ_TIMER:
+			timer_handler();
+			break;
+		case IRQ_OFFSET + IRQ_KBD:
+			kbd_intr();
+			break;    
+		default:
+			// Unexpected trap: The user process or the kernel has a bug.
+			print_trapframe(tf);
+	}
 }
 
 /* 
@@ -134,7 +147,6 @@ void default_trap_handler(struct Trapframe *tf)
 	// Dispatch based on what type of trap occurred
 	trap_dispatch(tf);
 }
-
 
 void trap_init()
 {
@@ -161,7 +173,15 @@ void trap_init()
    */
 
 	/* Keyboard interrupt setup */
+	kbd_init();
+	timer_init();
 	/* Timer Trap setup */
   /* Load IDT */
+  SETGATE(idt[IRQ_OFFSET + IRQ_TIMER], 0, GD_KT, irq_timer, 0);
+  SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, irq_kbd, 0);
 
+	idt_pd.pd_lim = (sizeof(struct Gatedesc) * 256) - 1;
+	idt_pd.pd_base = (uint32_t) &idt;
+
+	lidt(&idt_pd);     
 }

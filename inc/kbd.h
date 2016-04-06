@@ -81,5 +81,6 @@
 #define	KBR_ECHO	0xEE	/* echo response */
 
 void kbd_init(void);
+void kbd_intr(void);
 
 #endif 
