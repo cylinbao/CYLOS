@@ -20,8 +20,12 @@ static struct Command commands[] = {
 
 int chgcolor(int argc, char **argv)
 {
-	settextcolor((unsigned char) argv[argc-1], 0);
-	cprintf("Change color %s!\n", argv[argc-1]);
+	if(argc < 2)
+		cprintf("No input color\n");
+	else {
+		settextcolor(argv[argc-1][0], '0');
+		cprintf("Change color %s!\n", argv[argc-1]);
+	}
 	return 0;
 }
 
@@ -36,10 +40,8 @@ int mon_help(int argc, char **argv)
 
 extern unsigned long kernel_load_addr;
 extern unsigned long kernel_code_end;
-extern unsigned long kernel_exec_addr;
-extern unsigned long kernel_exec_end;
-extern unsigned long kernel_data_addr;
-extern unsigned long kernel_data_end;
+extern unsigned long kernel_data_start;
+extern unsigned long kernel_end;
 
 int mon_kerninfo(int argc, char **argv)
 {
@@ -49,14 +51,15 @@ int mon_kerninfo(int argc, char **argv)
    *       Use PROVIDE inside linker script and calculate the
    *       offset.
    */
-	unsigned long kernel_size = &kernel_code_end - &kernel_load_addr;
-	unsigned long kernel_exec_size = &kernel_exec_end-&kernel_exec_addr;
-	unsigned long kernel_data_size = &kernel_data_end-&kernel_data_addr;
+	unsigned long kernel_code_size = &kernel_code_end-&kernel_load_addr;
+	unsigned long kernel_exec_size = &kernel_end - &kernel_load_addr;
+	unsigned long kernel_data_size = &kernel_end - &kernel_data_start;
+
 	cprintf("Kernel code base start=0x%x", &kernel_load_addr);
-	cprintf(" size = %d\n", kernel_size);
-	cprintf("Kernel data base start=0x%x", &kernel_data_addr);
+	cprintf(" size = %d\n", kernel_code_size);
+	cprintf("Kernel data base start=0x%x", &kernel_code_end);
 	cprintf(" size = %d\n", kernel_data_size);
-	cprintf("Kernel executable memory footprint: %dKB\n", (int)(&kernel_exec_size)/1024);
+	cprintf("Kernel executable memory footprint: %dKB\n", kernel_exec_size/1024);
 	return 0;
 }
 
