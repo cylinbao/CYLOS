@@ -57,7 +57,7 @@ int mon_kerninfo(int argc, char **argv)
 
 	cprintf("Kernel code base start=0x%x", &kernel_load_addr);
 	cprintf(" size = %d\n", kernel_code_size);
-	cprintf("Kernel data base start=0x%x", &kernel_code_end);
+	cprintf("Kernel data base start=0x%x", &kernel_data_start);
 	cprintf(" size = %d\n", kernel_data_size);
 	cprintf("Kernel executable memory footprint: %dKB\n", kernel_exec_size/1024);
 	return 0;
