@@ -12,9 +12,12 @@ SECTIONS
 
 	/* AT(...) gives the load address of this section, which tells
 	   the boot loader where to load the kernel in physical memory */
+	kernel_exec_addr = . ;
 	.text : {
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 	}
+	kernel_exec_end = . ;
+
 	PROVIDE(etext = .);	/* Define the 'etext' symbol to this value */
 
 	.rodata : {
@@ -37,14 +40,17 @@ SECTIONS
 		BYTE(0)		/* Force the linker to allocate space
 				   for this section */
 	}
+	kernel_code_end = . ;
 	
 	/* Adjust the address for the data segment to the next page */
 	. = ALIGN(0x1000);
 
+	kernel_data_addr = .;
 	/* The data segment */
 	.data : {
 		*(.data)
 	}
+	kernel_data_end = . ;
 	.bss : {
 		*(.bss)
 	}
