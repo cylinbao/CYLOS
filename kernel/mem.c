@@ -147,6 +147,9 @@ mem_init(void)
 	// to initialize all fields of each struct PageInfo to 0.
 	// Your code goes here:
     /* TODO */
+    /* Lab4 */
+	pages = (struct PageInfo *) boot_alloc(npages*PGSIZE);
+	memset(pages, 0, npages*PGSIZE);
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -155,6 +158,8 @@ mem_init(void)
 	// particular, we can now map memory using boot_map_region
 	// or page_insert
 	page_init();
+
+	cprintf("Going to do the first three checkings!\n");
 
 	check_page_free_list(1);
 	check_page_alloc();
@@ -258,12 +263,18 @@ page_init(void)
 	// free pages!
 	
     /* TODO */
-    size_t i;
-	for (i = 0; i < npages; i++) {
+    /* Lab4 */
+  pages[0].pp_ref = 0;
 
+  size_t i;
+	for (i = 1; i < npages_basemem; i++) {
         pages[i].pp_ref = 0;
         pages[i].pp_link = page_free_list;
         page_free_list = &pages[i];
+  }
+	size_t EXT_page = EXTPHYSMEM / PGSIZE;
+	for (i = EXT_page; i < npages; i++) {
+        pages[i].pp_ref = 0;
     }
 }
 
