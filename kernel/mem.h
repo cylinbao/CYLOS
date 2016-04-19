@@ -3,6 +3,7 @@
 
 #include <inc/memlayout.h>
 #include <inc/assert.h>
+#include <inc/trap.h>
 
 extern char bootstacktop[], bootstack[];
 
@@ -11,6 +12,8 @@ extern size_t npages;
 
 extern pde_t *kern_pgdir;
 
+// OSDI Lab4
+void page_fault_handler();
 
 /* This macro takes a kernel virtual address -- an address that points above
  * KERNBASE, where the machine's maximum 256MB of physical memory is mapped --

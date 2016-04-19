@@ -11,8 +11,9 @@
 static struct Trapframe *last_tf;
 extern void irq_timer();
 extern void irq_kbd();
+extern void int_page_fault();
 
-/* TODO: You should declare an interrupt descriptor table.
+/* Lab3: You should declare an interrupt descriptor table.
  *       In x86, there are at most 256 it.
  *
  * Note: You can leverage the Gatedesc data structure inside mmu.h
@@ -108,7 +109,7 @@ print_regs(struct PushRegs *regs)
 static void
 trap_dispatch(struct Trapframe *tf)
 {
-  /* TODO: Handle specific interrupts.
+  /* Lab3: Handle specific interrupts.
    *       You need to check the interrupt number in order to tell
    *       which interrupt is currently happening since every interrupt
    *       comes to this function called by default_trap_handler.
@@ -128,6 +129,10 @@ trap_dispatch(struct Trapframe *tf)
 			break;
 		case IRQ_OFFSET + IRQ_KBD:
 			kbd_intr();
+			break;    
+		// Add for page fault handler for lab4
+		case T_PGFLT:
+			page_fault_handler();
 			break;    
 		default:
 			// Unexpected trap: The user process or the kernel has a bug.
@@ -150,7 +155,7 @@ void default_trap_handler(struct Trapframe *tf)
 
 void trap_init()
 {
-  /* TODO: You should initialize the interrupt descriptor table.
+  /* Lab3: You should initialize the interrupt descriptor table.
    *       You should setup at least keyboard interrupt and timer interrupt as
    *       the lab's requirement.
    *
@@ -179,6 +184,8 @@ void trap_init()
   /* Load IDT */
   SETGATE(idt[IRQ_OFFSET + IRQ_TIMER], 0, GD_KT, irq_timer, 0);
   SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, irq_kbd, 0);
+	// Add for Lab4
+  SETGATE(idt[T_PGFLT], 0, GD_KT, int_page_fault, 0);
 
 	idt_pd.pd_lim = (sizeof(struct Gatedesc) * 256) - 1;
 	idt_pd.pd_base = (uint32_t) &idt;

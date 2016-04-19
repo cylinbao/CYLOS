@@ -28,6 +28,8 @@ TRAPHANDLER_NOEC(irq_serial, IRQ_OFFSET + IRQ_SERIAL);
 TRAPHANDLER_NOEC(irq_spurious, IRQ_OFFSET + IRQ_SPURIOUS);
 TRAPHANDLER_NOEC(irq_ide, IRQ_OFFSET + IRQ_IDE);
 TRAPHANDLER_NOEC(irq_error, IRQ_OFFSET + IRQ_ERROR);
+/* Add page fault handler for Lab4 */
+TRAPHANDLER_NOEC(int_page_fault, T_PGFLT);
 
 .globl default_trap_handler;
 _alltraps:

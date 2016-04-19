@@ -45,7 +45,7 @@ extern unsigned long kernel_end;
 
 int mon_kerninfo(int argc, char **argv)
 {
-	/* TODO: Print the kernel code and data section size 
+	/* Lab3: Print the kernel code and data section size 
    * NOTE: You can count only linker script (kernel/kern.ld) to
    *       provide you with those information.
    *       Use PROVIDE inside linker script and calculate the

@@ -19,6 +19,17 @@ pde_t *kern_pgdir;		// Kernel's initial page directory
 struct PageInfo *pages;		// Physical page state array
 static struct PageInfo *page_free_list;	// Free list of physical pages
 
+// NCTU OSID Lab4, this handler will show info about the page fault
+void
+page_fault_handler()
+{
+	uint32_t addr = rcr2();
+	pte_t *ppte = pgdir_walk(kern_pgdir, &addr, true);
+
+	cprintf("[%lu] Page Fault @ 0x%08x\n", *ppte, addr);
+	while(1);
+}
+
 // --------------------------------------------------------------
 // Detect machine's physical memory setup.
 // --------------------------------------------------------------
@@ -146,7 +157,6 @@ mem_init(void)
 	// array.  'npages' is the number of physical pages in memory.  Use memset
 	// to initialize all fields of each struct PageInfo to 0.
 	// Your code goes here:
-    /* TODO */
     /* Lab4 */
 	pages = (struct PageInfo *) boot_alloc(npages * sizeof(struct PageInfo));
 	memset(pages, 0, npages * sizeof(struct PageInfo));
@@ -188,7 +198,6 @@ mem_init(void)
 	//       overwrite memory.  Known as a "guard page".
 	//     Permissions: kernel RW, user NONE
 	// Your code goes here:
-    /* TODO */
     /* Lab4 */
 	boot_map_region(kern_pgdir, KSTACKTOP - KSTKSIZE, KSTKSIZE, PADDR(bootstack), 
 									PTE_W);
@@ -201,7 +210,6 @@ mem_init(void)
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
-    /* TODO */
     /* Lab4 */ 
 	boot_map_region(kern_pgdir, KERNBASE, -KERNBASE, 0, PTE_W);
 
@@ -308,7 +316,6 @@ page_init(void)
 struct PageInfo *
 page_alloc(int alloc_flags)
 {
-    /* TODO */
     /* Lab4 */
 	struct PageInfo *ppage;
 	if(page_free_list != NULL){
@@ -335,7 +342,6 @@ page_free(struct PageInfo *pp)
 	// Fill this function in
 	// Hint: You may want to panic if pp->pp_ref is nonzero or
 	// pp->pp_link is not NULL.
-    /* TODO */
     /* Lab4 */
 	pp->pp_link = page_free_list;
 	page_free_list = pp;
@@ -378,7 +384,6 @@ pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
 	// Fill this function in
-    /* TODO */
     /* Lab4 */
 	struct PageInfo *pp = NULL;
 	pde_t *ppde = &pgdir[PDX(va)];
@@ -414,7 +419,6 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
-    /* TODO */
     /* Lab4 */
 	pte_t *ppte;
 
@@ -461,7 +465,6 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 int
 page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 {
-    /* TODO */
     /* Lab4 */
 	pte_t *ppte;
 	
@@ -494,7 +497,6 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 struct PageInfo *
 page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 {
-    /* TODO */
     /* Lab4 */
 	pte_t *ppte = pgdir_walk(pgdir, va, false);
 	if(ppte == NULL)
@@ -527,7 +529,6 @@ page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 void
 page_remove(pde_t *pgdir, void *va)
 {
-    /* TODO */
     /* Lab4 */
 	pte_t *ppte;
 	struct PageInfo *pp;

@@ -49,7 +49,7 @@ loop:
 # Bootstrap GDT
 	.p2align 2                                # force 4 byte alignment
 gdt:
-# TODO: Fillup GDT entry with SEG macro
+# Lab3: Fillup GDT entry with SEG macro
 #       One for kernel code segment
 #       One for kernel data segment
 #
@@ -63,7 +63,7 @@ gdt:
 	SEG(STA_X|STA_R, 0x0, 0xffffffff)     # Kernel code segment
 	SEG(STA_W, 0x0, 0xffffffff)     # Kernel data segment
 
-# TODO: Please fillup the GDT register for gdt in order to used
+# Lab3: Please fillup the GDT register for gdt in order to used
 #       with "lgdt" instruction.
 # Note: You can reference lab3_reference page 13 for detail meaning
 #       of each bit of GDT register.
