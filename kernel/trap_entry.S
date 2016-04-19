@@ -16,7 +16,7 @@
 
 .text
 
-/* TODO: Interface declaration for ISRs
+/* Lab3: Interface declaration for ISRs
  * Note: Use TRAPHANDLER_NOEC macro define other isr enrty
  *       The Trap number are declared in inc/trap.h which might come in handy
  *       when declaring interface for ISRs.
@@ -31,7 +31,7 @@ TRAPHANDLER_NOEC(irq_error, IRQ_OFFSET + IRQ_ERROR);
 
 .globl default_trap_handler;
 _alltraps:
-  /* TODO: Since we are going to call default_trap_handler, we have to prepare
+  /* Lab3: Since we are going to call default_trap_handler, we have to prepare
    *       the argument for it, which is placed on the stack.
    *       Thus push registers to fillup the Trapframe data structure.
    * 
