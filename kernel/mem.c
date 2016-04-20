@@ -276,8 +276,6 @@ page_init(void)
 	// free pages!
 	
     /* Lab4 */
-  pages[0].pp_ref = 1;
-
   size_t i;
 	uint32_t num_kpages = (((uint32_t) boot_alloc(0)) - KERNBASE) / PGSIZE;
 
@@ -287,13 +285,7 @@ page_init(void)
 		page_free_list = &pages[i];
 	}
 
-	/*
-	for(i = npages_basemem; i < npages_basemem + 96 + num_kpages; i++)
-  	pages[i].pp_ref = 1;
-	*/
-
 	i = PGNUM(PADDR(boot_alloc(0)));
-	//for (i = npages_basemem + 96 + num_kpages; i < npages; i++) {
 	for (; i < npages; i++) {
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
@@ -733,13 +725,13 @@ check_kern_pgdir(void)
 	// check PDE permissions
 	for (i = 0; i < NPDENTRIES; i++) {
 		switch (i) {
-        case PDX(IOPHYSMEM):
-		case PDX(UVPT):
-		case PDX(KSTACKTOP-1):
-		case PDX(UPAGES):
+			case PDX(IOPHYSMEM):
+			case PDX(UVPT):
+			case PDX(KSTACKTOP-1):
+			case PDX(UPAGES):
 			assert(pgdir[i] & PTE_P);
 			break;
-		default:
+			default:
 			if (i >= PDX(KERNBASE)) {
 				assert(pgdir[i] & PTE_P);
 				assert(pgdir[i] & PTE_W);

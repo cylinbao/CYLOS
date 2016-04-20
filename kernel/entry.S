@@ -24,7 +24,8 @@ entry:
 	movl	$(RELOC(entry_pgdir)), %eax
 	movl	%eax, %cr3
 	# Turn on paging.
-	movl	%cr0, %eax
+	# cr0 is control register for x86 cpu, it enable paging if the bit-31 is 1
+	movl	%cr0, %eax 
 	orl	$(CR0_PE|CR0_PG|CR0_WP), %eax
 	movl	%eax, %cr0
 
