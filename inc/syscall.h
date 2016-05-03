@@ -5,16 +5,16 @@
 /* system call numbers */
 enum {
 	SYS_puts = 0,
-	SYS_getc,
-	SYS_getpid,
-	SYS_fork,
-	SYS_kill,
-	SYS_sleep,
-  SYS_get_num_used_page,
-  SYS_get_num_free_page,
-  SYS_get_ticks,
-  SYS_settextcolor,
-  SYS_cls,
+	SYS_getc, // 1
+	SYS_getpid, // 2
+	SYS_fork, // 3
+	SYS_kill, // 4
+	SYS_sleep, // 5
+  SYS_get_num_used_page, // 6
+  SYS_get_num_free_page, // 7
+  SYS_get_ticks, // 8
+  SYS_settextcolor, // 9
+  SYS_cls, // 10
 
 	NSYSCALLS
 };

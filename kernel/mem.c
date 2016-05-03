@@ -572,6 +572,14 @@ setupvm(pde_t *pgdir, uint32_t start, uint32_t size)
 pde_t *
 setupkvm()
 {
+	struct PageInfo *ppage = NULL;
+
+	if(!(ppage = page_alloc(ALLOC_ZERO)))
+		return -E_NO_MEM;
+
+	ppage->pp_ref++;
+
+	return page2kva(ppage);
 }
 
 

@@ -98,14 +98,34 @@ extern void sched_yield(void);
 int task_create()
 {
 	Task *ts = NULL;
+	int findtask = 0, i, id;
+	struct PageInfo *ppage;
 
 	/* Find a free task structure */
+	for(i = 0; i < NR_TASKS; i++)
+	{
+		if(tasks[i].state == TASK_FREE)
+			break;
+	}
+
+	if(i >= NR_TASKS)
+		return -1;
+
+	ts = &tasks[i];
+	id = i;
 
   /* Setup Page Directory and pages for kernel*/
   if (!(ts->pgdir = setupkvm()))
     panic("Not enough memory for per process page directory!\n");
 
   /* Setup User Stack */
+	for(i = USTACKTOP - USR_STACK_SIZE; i <= USTACKTOP; i += PGSIZE){
+		ppage = page_alloc(ALLOC_ZERO);	
+		if(ppage != NULL)
+			page_insert(ts->pgdir, ppage, (void *) i, PTE_U);
+		else
+			return -1;
+	}
 
 	/* Setup Trapframe */
 	memset( &(ts->tf), 0, sizeof(ts->tf));
@@ -117,6 +137,12 @@ int task_create()
 	ts->tf.tf_esp = USTACKTOP-PGSIZE;
 
 	/* Setup task structure (task_id and parent_id) */
+	ts->task_id = id;
+	ts->parent_id = cur_task->task_id;
+	ts->remind_ticks = 0;
+	ts->state = TASK_RUNNABLE;
+
+	return ts->task_id;
 }
 
 
@@ -180,7 +206,28 @@ void sys_kill(int pid)
 int sys_fork()
 {
   /* pid for newly created process */
-  int pid;
+  int pid, i, id;
+	struct PageInfo *ppageOld, *ppageNew;
+
+	id = cur_task->task_id;
+
+	// create an empty task
+	if(!(pid = task_create()))
+		return -1;
+
+	// copy the Trapframe
+	memcpy(&(tasks[pid].tf), &(cur_task->tf), sizeof(struct Trapframe));
+
+	// copy stack
+	for(i = USTACKTOP - USR_STACK_SIZE; i <= USTACKTOP; i += PGSIZE){
+		ppageOld = pgdir_walk(cur_task->pgdir, (void *) i, 0);	
+		ppageNew = pgdir_walk(tasks[pid].pgdir, (void *) i, 0);	
+		if((ppageOld != NULL) && (ppageNew != NULL))
+			memcpy(ppageNew, ppageOld, PGSIZE);
+		else
+			return -1;
+	}
+
 	if ((uint32_t)cur_task)
 	{
     /* Step 4: All user program use the same code for now */
@@ -188,8 +235,12 @@ int sys_fork()
     setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
     setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
     setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-
 	}
+	
+	// clear eax for child, so fork will return 0 in child
+	tasks[pid].tf.tf_regs.reg_eax = 0;
+
+	return pid;
 }
 
 /* TODO: Lab5
