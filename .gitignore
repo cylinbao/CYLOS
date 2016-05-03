@@ -1,6 +1,8 @@
 *.o
 *.swp
-system*
-boot
-boot.asm
 boot.out
+cscope.out
+tags
+*.o
+*.asm
+kernel/system
