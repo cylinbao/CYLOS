@@ -20,17 +20,6 @@ struct PageInfo          *pages;		// Physical page state array
 static struct PageInfo   *page_free_list;	// Free list of physical pages
 size_t                   num_free_pages;
 
-// NCTU OSID Lab4, this handler will show info about the page fault
-void
-page_fault_handler()
-{
-	uint32_t addr = rcr2();
-	pte_t *ppte = pgdir_walk(kern_pgdir, &addr, true);
-
-	cprintf("[%lu] Page Fault @ 0x%08x\n", *ppte, addr);
-	while(1);
-}
-
 // --------------------------------------------------------------
 // Detect machine's physical memory setup.
 // --------------------------------------------------------------

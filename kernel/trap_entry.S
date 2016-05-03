@@ -39,8 +39,8 @@ TRAPHANDLER_NOEC(Default_ISR, T_DEFAULT)
 TRAPHANDLER_NOEC(KBD_Input, IRQ_OFFSET+IRQ_KBD)
 TRAPHANDLER_NOEC(TIM_ISR, IRQ_OFFSET+IRQ_TIMER)
 
-// TODO: Lab 5
-// Please add interface of system call
+/* TODO: Lab 5
+/ Please add interface of system call */
 
 TRAPHANDLER_NOEC(GPFLT, T_GPFLT)
 TRAPHANDLER_NOEC(STACK_ISR, T_STACK)
@@ -52,8 +52,6 @@ TRAPHANDLER_NOEC(irq_serial, IRQ_OFFSET + IRQ_SERIAL);
 TRAPHANDLER_NOEC(irq_spurious, IRQ_OFFSET + IRQ_SPURIOUS);
 TRAPHANDLER_NOEC(irq_ide, IRQ_OFFSET + IRQ_IDE);
 TRAPHANDLER_NOEC(irq_error, IRQ_OFFSET + IRQ_ERROR);
-/* Add page fault handler for Lab4 */
-TRAPHANDLER_NOEC(int_page_fault, T_PGFLT);
 
 .globl default_trap_handler;
 _alltraps:
