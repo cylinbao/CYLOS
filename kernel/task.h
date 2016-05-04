@@ -38,5 +38,7 @@ void env_pop_tf(struct Trapframe *tf);
  */
 int task_create();
 int sys_fork();
+void sys_kill(int pid);
+int sys_getpid();
 
 #endif

@@ -69,7 +69,13 @@ Task *cur_task = NULL; //Current running task
 
 extern void sched_yield(void);
 
-
+int sys_getpid()
+{
+	if(cur_task != NULL)
+		return cur_task->task_id;
+	else
+		return -1;
+}
 /* TODO: Lab5
  * 1. Find a free task structure for the new task,
  *    the global task list is in the array "tasks".
@@ -98,7 +104,7 @@ extern void sched_yield(void);
 int task_create()
 {
 	Task *ts = NULL;
-	int findtask = 0, i, id;
+	int i, id;
 	struct PageInfo *ppage;
 
 	/* Find a free task structure */
@@ -122,7 +128,7 @@ int task_create()
 	for(i = USTACKTOP - USR_STACK_SIZE; i <= USTACKTOP; i += PGSIZE){
 		ppage = page_alloc(ALLOC_ZERO);	
 		if(ppage != NULL)
-			page_insert(ts->pgdir, ppage, (void *) i, PTE_U);
+			page_insert(ts->pgdir, ppage, (void *) i, PTE_U | PTE_W);
 		else
 			return -1;
 	}
@@ -165,6 +171,23 @@ int task_create()
  */
 static void task_free(int pid)
 {
+	Task *ts = NULL;
+	int i;
+
+	ts = &tasks[pid];
+
+	if(pid > 0 && pid < NR_TASKS){
+		// change the page directory to kernel's page directory
+		lcr3(PADDR(kern_pgdir));	
+
+		// remove pages of USER STACK
+		for(i = USTACKTOP - USR_STACK_SIZE; i <= USTACKTOP; i += PGSIZE){
+			page_remove(ts->pgdir, (void *) i);
+		}
+
+		ptable_remove(ts->pgdir);
+		pgdir_remove(ts->pgdir);
+	}
 }
 
 void sys_kill(int pid)
@@ -176,6 +199,9 @@ void sys_kill(int pid)
    * Free the memory
    * and invoke the scheduler for yield
    */
+		tasks[pid].state = TASK_FREE;
+		task_free(pid);	
+		sched_yield();
 	}
 }
 
@@ -218,12 +244,16 @@ int sys_fork()
 	// copy the Trapframe
 	memcpy(&(tasks[pid].tf), &(cur_task->tf), sizeof(struct Trapframe));
 
+	pte_t *pte;
 	// copy stack
 	for(i = USTACKTOP - USR_STACK_SIZE; i <= USTACKTOP; i += PGSIZE){
-		ppageOld = pgdir_walk(cur_task->pgdir, (void *) i, 0);	
-		ppageNew = pgdir_walk(tasks[pid].pgdir, (void *) i, 0);	
-		if((ppageOld != NULL) && (ppageNew != NULL))
-			memcpy(ppageNew, ppageOld, PGSIZE);
+		ppageOld = page_lookup(cur_task->pgdir, (void *) i, &pte);	
+		ppageNew = page_lookup(tasks[pid].pgdir, (void *) i, &pte);	
+		if((ppageOld != NULL) && (ppageNew != NULL)){
+			uint32_t *kvaOld = (uint32_t *) page2kva(ppageOld);
+			uint32_t *kvaNew = (uint32_t *) page2kva(ppageNew);
+			memcpy(kvaNew, kvaOld, PGSIZE);
+		}
 		else
 			return -1;
 	}
@@ -300,6 +330,3 @@ void task_init()
 	cur_task->state = TASK_RUNNING;
 	
 }
-
-
-

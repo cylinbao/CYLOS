@@ -32,6 +32,7 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
 		/* TODO: Lab 5
      * You can reference kernel/task.c, kernel/task.h
      */
+		retVal = sys_fork();
 		break;
 
 	case SYS_getc:
@@ -47,6 +48,7 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
 		/* TODO: Lab 5
      * Get current task's pid
      */
+		retVal = sys_getpid();
 		break;
 
 	case SYS_sleep:
@@ -61,6 +63,7 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
      * Kill specific task
      * You can reference kernel/task.c, kernel/task.h
      */
+		sys_kill(a1);
 		break;
 
   case SYS_get_num_free_page:
@@ -109,6 +112,9 @@ static void syscall_handler(struct Trapframe *tf)
 	retVal = do_syscall(tf->tf_regs.reg_eax, tf->tf_regs.reg_ecx, 
 					tf->tf_regs.reg_edx, tf->tf_regs.reg_ebx, tf->tf_regs.reg_esi, 
 					tf->tf_regs.reg_edi);
+
+	/* TODO Still don't know how to put the return value */
+	tf->tf_regs.reg_eax = retVal;
 }
 
 void syscall_init()
