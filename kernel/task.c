@@ -139,13 +139,18 @@ int task_create()
   if (!(ts->pgdir = setupkvm()))
     panic("Not enough memory for per process page directory!\n");
 
+	printk("pgdir num = %x\n", PADDR(ts->pgdir));
+
   /* Setup User Stack */
-	for(i = USTACKTOP - USR_STACK_SIZE; i <= USTACKTOP; i += PGSIZE){
+	for(i = USTACKTOP - USR_STACK_SIZE; i < USTACKTOP; i += PGSIZE){
 		ppage = page_alloc(ALLOC_ZERO);	
+		page_insert(ts->pgdir, ppage, (void *) i, PTE_U | PTE_W);
+		/*
 		if(ppage != NULL)
 			page_insert(ts->pgdir, ppage, (void *) i, PTE_U | PTE_W);
 		else
 			return -1;
+		*/
 	}
 
 	/* Setup Trapframe */
@@ -310,7 +315,6 @@ void task_init()
 	{
 		memset(&(tasks[i]), 0, sizeof(Task));
 		tasks[i].state = TASK_FREE;
-
 	}
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
@@ -328,6 +332,7 @@ void task_init()
 
 	/* Setup first task */
 	i = task_create();
+	printk("first task id = %d\n", i);
 	cur_task = &(tasks[i]);
 
   /* For user program */
@@ -337,6 +342,13 @@ void task_init()
   setupvm(cur_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
   cur_task->tf.tf_eip = (uint32_t)user_entry;
 	
+	/*
+  setupvm(kern_pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+  setupvm(kern_pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+  setupvm(kern_pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+  setupvm(kern_pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+  cur_task->tf.tf_eip = (uint32_t)user_entry;
+	*/
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);
 

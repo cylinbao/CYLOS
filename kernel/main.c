@@ -38,11 +38,16 @@ void kernel_main(void)
   task_init();
 
   /* Enable interrupt */
-  __asm __volatile("sti");
+  //__asm __volatile("sti");
 
-	//test();
+	test();
 
   lcr3(PADDR(cur_task->pgdir));
+
+	/*
+	cprintf("be sh!\n");
+	shell();
+	*/
 
   printk("pass loading pgdir\n");
 
