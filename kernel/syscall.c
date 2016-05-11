@@ -56,6 +56,7 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
      * Yield this task
      * You can reference kernel/sched.c for yielding the task
      */
+		retVal = sys_sleep(a1);
 		break;
 
 	case SYS_kill:
@@ -64,18 +65,21 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
      * You can reference kernel/task.c, kernel/task.h
      */
 		sys_kill(a1);
+		retVal = 0;
 		break;
 
   case SYS_get_num_free_page:
 		/* TODO: Lab 5
      * You can reference kernel/mem.c
      */
+		retVal = sys_get_num_free_page();
     break;
 
   case SYS_get_num_used_page:
 		/* TODO: Lab 5
      * You can reference kernel/mem.c
      */
+		retVal = sys_get_num_used_page();
     break;
 
   case SYS_get_ticks:
@@ -89,14 +93,19 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
 		/* TODO: Lab 5
      * You can reference kernel/screen.c
      */
+		sys_settextcolor((char) a1, (char) a2);
+		retVal = 0;
     break;
 
   case SYS_cls: // syscall for clearing the screen
 		/* TODO: Lab 5
      * You can reference kernel/screen.c
      */
+		sys_cls();
+		retVal = 0;
     break;
 	}
+
 	return retVal;
 }
 
@@ -113,7 +122,7 @@ static void syscall_handler(struct Trapframe *tf)
 					tf->tf_regs.reg_edx, tf->tf_regs.reg_ebx, tf->tf_regs.reg_esi, 
 					tf->tf_regs.reg_edi);
 
-	/* TODO Still don't know how to put the return value */
+	/* Save the return value back to the reg_eax of current tf */
 	tf->tf_regs.reg_eax = retVal;
 }
 

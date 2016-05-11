@@ -462,6 +462,8 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 	*ppte = (page2pa(pp) | perm | PTE_P);
 	pgdir[PTX(va)] | perm;
 	
+	num_free_pages--;
+
 	return 0;
 }
 
@@ -521,6 +523,8 @@ page_remove(pde_t *pgdir, void *va)
 	page_decref(pp);
 	tlb_invalidate(pgdir, va);
 	*ppte = (*ppte & 0);
+
+	num_free_pages++;
 }
 
 void

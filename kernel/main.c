@@ -12,6 +12,10 @@
 extern void init_video(void);
 extern Task *cur_task;
 
+void test() {
+  printk("In function test\n");
+}
+
 void kernel_main(void)
 {
 	extern char stext[];
@@ -36,7 +40,11 @@ void kernel_main(void)
   /* Enable interrupt */
   __asm __volatile("sti");
 
+	//test();
+
   lcr3(PADDR(cur_task->pgdir));
+
+  printk("pass loading pgdir\n");
 
   /* Move to user mode */
   asm volatile("movl %0,%%eax\n\t" \

@@ -19,9 +19,19 @@ enum {
 	NSYSCALLS
 };
 
-int32_t get_num_used_page(void);
+void puts(const char *s, size_t len);
 
-int32_t cls(void);
+int getc(void);
+
+int32_t getpid(void);
+
+int32_t fork(void);
+
+void kill_self();
+
+void sleep(uint32_t ticks);
+
+int32_t get_num_used_page(void);
 
 int32_t get_num_free_page(void);
 
@@ -29,14 +39,5 @@ unsigned long get_ticks(void);
 
 void settextcolor(unsigned char forecolor, unsigned char backcolor);
 
-int32_t fork(void);
-
-int32_t getpid(void);
-
-void kill_self();
-
-void sleep(uint32_t ticks);
-
-void puts(const char *s, size_t len);
-int getc(void);
+int32_t cls(void);
 #endif

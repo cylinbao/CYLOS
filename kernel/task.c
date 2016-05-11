@@ -76,6 +76,21 @@ int sys_getpid()
 	else
 		return -1;
 }
+
+int sys_sleep(uint32_t time)
+{
+	if(cur_task != NULL && cur_task->state == TASK_RUNNING){
+		cur_task->state = TASK_SLEEP;
+		cur_task->remind_ticks = (int32_t) time;
+		sched_yield();
+		return 0;
+	}
+	else{
+		panic("Can't sleep the task\n");
+		return -1;
+	}
+}
+
 /* TODO: Lab5
  * 1. Find a free task structure for the new task,
  *    the global task list is in the array "tasks".
@@ -144,7 +159,11 @@ int task_create()
 
 	/* Setup task structure (task_id and parent_id) */
 	ts->task_id = id;
-	ts->parent_id = cur_task->task_id;
+	if(cur_task != NULL)
+		ts->parent_id = cur_task->task_id;
+	else
+		ts->parent_id = NULL;
+
 	ts->remind_ticks = 0;
 	ts->state = TASK_RUNNABLE;
 
@@ -321,12 +340,10 @@ void task_init()
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);
 
-
 	lldt(0);
 
 	// Load the TSS selector 
 	ltr(GD_TSS0);
 
 	cur_task->state = TASK_RUNNING;
-	
 }
