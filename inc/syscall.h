@@ -15,6 +15,7 @@ enum {
   SYS_get_ticks, // 8
   SYS_settextcolor, // 9
   SYS_cls, // 10
+	SYS_test, // 11
 
 	NSYSCALLS
 };
@@ -40,4 +41,6 @@ unsigned long get_ticks(void);
 void settextcolor(unsigned char forecolor, unsigned char backcolor);
 
 int32_t cls(void);
+
+int32_t test(void);
 #endif

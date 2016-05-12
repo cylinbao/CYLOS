@@ -5,8 +5,6 @@
 #include <kernel/trap.h>
 #include <inc/stdio.h>
 
-extern void syscall();
-
 void do_puts(char *str, uint32_t len)
 {
 	uint32_t i;
@@ -104,6 +102,9 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
 		sys_cls();
 		retVal = 0;
     break;
+	case SYS_test:
+		retVal = 12345678;
+		break;
 	}
 
 	return retVal;
@@ -118,9 +119,15 @@ static void syscall_handler(struct Trapframe *tf)
    */
 
 	int32_t retVal; // retVal will represent error number
-	retVal = do_syscall(tf->tf_regs.reg_eax, tf->tf_regs.reg_ecx, 
-					tf->tf_regs.reg_edx, tf->tf_regs.reg_ebx, tf->tf_regs.reg_esi, 
-					tf->tf_regs.reg_edi);
+	uint32_t syscallno, a1, a2, a3, a4, a5;
+	syscallno = tf->tf_regs.reg_eax;
+	a1 = tf->tf_regs.reg_edx;
+	a2 = tf->tf_regs.reg_ecx;
+	a3 = tf->tf_regs.reg_ebx;
+	a4 = tf->tf_regs.reg_edi;
+	a5 = tf->tf_regs.reg_esi;
+
+	retVal = do_syscall(syscallno, a1, a2, a3, a4, a5);
 
 	/* Save the return value back to the reg_eax of current tf */
 	tf->tf_regs.reg_eax = retVal;
@@ -132,6 +139,8 @@ void syscall_init()
    * Please set gate of system call into IDT
    * You can leverage the API register_handler in kernel/trap.c
    */
-	register_handler(T_SYSCALL, syscall_handler, syscall, 1, 3);
+	extern void SYSCALL_ISR();
+
+	register_handler(T_SYSCALL, &syscall_handler, &SYSCALL_ISR, 1, 3);
 }
 

@@ -125,7 +125,7 @@ int task_create()
 	/* Find a free task structure */
 	for(i = 0; i < NR_TASKS; i++)
 	{
-		if(tasks[i].state == TASK_FREE)
+		if(tasks[i].state == TASK_FREE || tasks[i].state == TASK_STOP)
 			break;
 	}
 
@@ -143,14 +143,11 @@ int task_create()
 
   /* Setup User Stack */
 	for(i = USTACKTOP - USR_STACK_SIZE; i < USTACKTOP; i += PGSIZE){
-		ppage = page_alloc(ALLOC_ZERO);	
-		page_insert(ts->pgdir, ppage, (void *) i, PTE_U | PTE_W);
-		/*
+		ppage = page_alloc(1);	
 		if(ppage != NULL)
 			page_insert(ts->pgdir, ppage, (void *) i, PTE_U | PTE_W);
 		else
 			return -1;
-		*/
 	}
 
 	/* Setup Trapframe */
@@ -167,7 +164,7 @@ int task_create()
 	if(cur_task != NULL)
 		ts->parent_id = cur_task->task_id;
 	else
-		ts->parent_id = NULL;
+		ts->parent_id = -1;
 
 	ts->remind_ticks = 0;
 	ts->state = TASK_RUNNABLE;
@@ -332,8 +329,9 @@ void task_init()
 
 	/* Setup first task */
 	i = task_create();
-	printk("first task id = %d\n", i);
 	cur_task = &(tasks[i]);
+	printk("first task id = %d parent id = %d\n", cur_task->task_id, 
+				 cur_task->parent_id);
 
   /* For user program */
   setupvm(cur_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
@@ -342,13 +340,6 @@ void task_init()
   setupvm(cur_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
   cur_task->tf.tf_eip = (uint32_t)user_entry;
 	
-	/*
-  setupvm(kern_pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-  setupvm(kern_pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-  setupvm(kern_pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-  setupvm(kern_pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-  cur_task->tf.tf_eip = (uint32_t)user_entry;
-	*/
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);
 

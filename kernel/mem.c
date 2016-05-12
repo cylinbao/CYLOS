@@ -189,8 +189,8 @@ mem_init(void)
 	//     Permissions: kernel RW, user NONE
 	// Your code goes here:
     /* Lab4 */
-	boot_map_region(kern_pgdir, KSTACKTOP - KSTKSIZE, ROUNDUP(KSTKSIZE, PGSIZE), PADDR(bootstack), 
-									(PTE_W | PTE_P));
+	boot_map_region(kern_pgdir, KSTACKTOP-KSTKSIZE, ROUNDUP(KSTKSIZE, PGSIZE), PADDR(bootstack), (PTE_W | PTE_P));
+	printk("boot_map_region, bootstack:[%x]\n", PADDR(bootstacktop));
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
@@ -201,11 +201,11 @@ mem_init(void)
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
     /* Lab4 */ 
-	boot_map_region(kern_pgdir, KERNBASE, ROUNDUP((0xffffffff-KERNBASE),PGSIZE), 0, (PTE_W | PTE_P));
+	boot_map_region(kern_pgdir, KERNBASE, (1<<32)-KERNBASE, 0, (PTE_W | PTE_P));
 
 	//////////////////////////////////////////////////////////////////////
 	// Map VA range [IOPHYSMEM, EXTPHYSMEM) to PA range [IOPHYSMEM, EXTPHYSMEM)
-    boot_map_region(kern_pgdir, IOPHYSMEM, ROUNDUP((EXTPHYSMEM - IOPHYSMEM), PGSIZE), IOPHYSMEM, (PTE_W) | (PTE_P));
+  boot_map_region(kern_pgdir, IOPHYSMEM, ROUNDUP((EXTPHYSMEM - IOPHYSMEM), PGSIZE), IOPHYSMEM, (PTE_W) | (PTE_P));
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
@@ -267,19 +267,26 @@ page_init(void)
 	
     /* Lab4 */
   size_t i;
-	uint32_t num_kpages = (((uint32_t) boot_alloc(0)) - KERNBASE) / PGSIZE;
 
-	for (i = 1; i < npages_basemem; i++) {
-		pages[i].pp_ref = 0;
-		pages[i].pp_link = page_free_list;
-		page_free_list = &pages[i];
-	}
-
-	i = PGNUM(PADDR(boot_alloc(0)));
-	for (; i < npages; i++) {
-		pages[i].pp_ref = 0;
-		pages[i].pp_link = page_free_list;
-		page_free_list = &pages[i];
+	for(i = 1; i < npages; i++){
+		if(i < npages_basemem){
+			pages[i].pp_ref = 0;
+			pages[i].pp_link = page_free_list;
+			page_free_list = &pages[i];
+		}
+		else if((i >= PGNUM(IOPHYSMEM)) && (i < PGNUM(EXTPHYSMEM))){
+			pages[i].pp_ref = 1;
+			pages[i].pp_link = NULL;
+		}
+		else if((i >= PGNUM(EXTPHYSMEM)) && (i < PGNUM(PADDR(boot_alloc(0))))){
+			pages[i].pp_ref = 1;
+			pages[i].pp_link = NULL;
+		}
+		else{
+			pages[i].pp_ref = 0;
+			pages[i].pp_link = page_free_list;
+			page_free_list = &pages[i];
+		}
 	}
 }
 
@@ -299,17 +306,16 @@ struct PageInfo *
 page_alloc(int alloc_flags)
 {
     /* Lab4 */
-	struct PageInfo *ppage;
-	if(page_free_list != NULL){
-		ppage = page_free_list;
+	struct PageInfo *ppage = NULL;
+	ppage = page_free_list;
+
+	if(ppage != NULL){
 		page_free_list = ppage->pp_link;
 		ppage->pp_link = NULL;
 
 		if(alloc_flags & ALLOC_ZERO)
-			memset(page2kva(ppage), 0, PGSIZE);
+			memset((void *)page2kva(ppage), 0, PGSIZE);
 	}
-	else
-		ppage = NULL;
 
 	return ppage;
 }
@@ -417,6 +423,8 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 		
 		if(ppte != NULL)
 			*ppte = (PTE_ADDR(currPA) | perm | PTE_P);
+		else
+			panic("pgdir_walk return null\n");
 	}
 }
 
@@ -519,14 +527,14 @@ page_remove(pde_t *pgdir, void *va)
 	pte_t *ppte;
 	struct PageInfo *pp;
 	pp = page_lookup(pgdir, va, &ppte);
-	if(pp == NULL)
-		return NULL;
 
-	page_decref(pp);
-	tlb_invalidate(pgdir, va);
-	*ppte = (*ppte & 0);
+	if(pp != NULL){
+		page_decref(pp);
+		*ppte = 0;
+		tlb_invalidate(pgdir, va);
 
-	num_free_pages++;
+		num_free_pages++;
+	}
 }
 
 void
@@ -584,13 +592,13 @@ setupkvm()
 	if(!(ppage = page_alloc(1)))
 		return -E_NO_MEM;
 
-	ppage->pp_ref++;
+	//ppage->pp_ref++;
 
 	ppde =  page2kva(ppage);
 
 	boot_map_region(ppde, KSTACKTOP-KSTKSIZE, KSTKSIZE, PADDR(bootstack), PTE_W);
 	boot_map_region(ppde, KERNBASE, (1<<32)-KERNBASE, 0, PTE_W);
-  boot_map_region(ppde, IOPHYSMEM, ROUNDUP((EXTPHYSMEM - IOPHYSMEM), PGSIZE), IOPHYSMEM, (PTE_W));
+  boot_map_region(ppde, IOPHYSMEM, ROUNDUP((EXTPHYSMEM - IOPHYSMEM), PGSIZE), IOPHYSMEM, PTE_W);
 	
 	return ppde;
 }

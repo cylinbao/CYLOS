@@ -83,3 +83,5 @@ settextcolor(unsigned char forecolor, unsigned char backcolor)
 }
 
 SYSCALL_NOARG(cls, int32_t);
+
+SYSCALL_NOARG(test, int32_t);

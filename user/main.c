@@ -4,6 +4,9 @@
 
 int user_entry()
 {
+	int num = test();
+	cprintf("num = %d\n", num);
+
 	asm volatile("movl %0,%%eax\n\t" \
     "movw %%ax,%%ds\n\t" \
     "movw %%ax,%%es\n\t" \
