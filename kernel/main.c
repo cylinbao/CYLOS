@@ -36,37 +36,7 @@ void kernel_main(void)
   /* Enable interrupt */
   __asm __volatile("sti");
 
-	/*
-	uint32_t UTEXT_SZ;
-	uint32_t UDATA_SZ;
-	uint32_t UBSS_SZ;
-	uint32_t URODATA_SZ;
-
-	extern char UTEXT_start[], UTEXT_end[];
-	extern char UDATA_start[], UDATA_end[];
-	extern char UBSS_start[], UBSS_end[];
-	extern char URODATA_start[], URODATA_end[];
-
-  UTEXT_SZ = (uint32_t)(UTEXT_end - UTEXT_start);
-  UDATA_SZ = (uint32_t)(UDATA_end - UDATA_start);
-  UBSS_SZ = (uint32_t)(UBSS_end - UBSS_start);
-  URODATA_SZ = (uint32_t)(URODATA_end - URODATA_start);
-
-  setupvm(kern_pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-  setupvm(kern_pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-  setupvm(kern_pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-  setupvm(kern_pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-
-	test();
-
-	shell();
-	*/
-
-  printk("after task_init\n");
-
   lcr3(PADDR(cur_task->pgdir));
-
-  printk("pass loading pgdir\n");
 
   /* Move to user mode */
   asm volatile("movl %0,%%eax\n\t" \

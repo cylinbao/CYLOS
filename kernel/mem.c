@@ -267,12 +267,13 @@ page_init(void)
 	
     /* Lab4 */
   size_t i;
-
+	num_free_pages = 0;
 	for(i = 1; i < npages; i++){
 		if(i < npages_basemem){
 			pages[i].pp_ref = 0;
 			pages[i].pp_link = page_free_list;
 			page_free_list = &pages[i];
+			num_free_pages++;
 		}
 		else if((i >= PGNUM(IOPHYSMEM)) && (i < PGNUM(EXTPHYSMEM))){
 			pages[i].pp_ref = 1;
@@ -286,6 +287,7 @@ page_init(void)
 			pages[i].pp_ref = 0;
 			pages[i].pp_link = page_free_list;
 			page_free_list = &pages[i];
+			num_free_pages++;
 		}
 	}
 }
@@ -316,7 +318,7 @@ page_alloc(int alloc_flags)
 		if(alloc_flags & ALLOC_ZERO)
 			memset((void *)page2kva(ppage), 0, PGSIZE);
 	}
-
+	num_free_pages--;
 	return ppage;
 }
 
@@ -333,6 +335,7 @@ page_free(struct PageInfo *pp)
     /* Lab4 */
 	pp->pp_link = page_free_list;
 	page_free_list = pp;
+	num_free_pages++;
 }
 
 //
@@ -533,7 +536,7 @@ page_remove(pde_t *pgdir, void *va)
 		*ppte = 0;
 		tlb_invalidate(pgdir, va);
 
-		num_free_pages++;
+		//num_free_pages++;
 	}
 }
 

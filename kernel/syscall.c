@@ -62,6 +62,7 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
      * Kill specific task
      * You can reference kernel/task.c, kernel/task.h
      */
+		cprintf("Going to kill pid = %d\n", a1);
 		sys_kill(a1);
 		retVal = 0;
 		break;

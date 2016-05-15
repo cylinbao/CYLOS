@@ -12,9 +12,11 @@
  * additional information in the latter case.
  */
 static struct Trapframe *last_tf;
+/*
 extern void irq_timer();
 extern void irq_kbd();
 extern void int_page_fault();
+*/
 
 /* Interrupt descriptor table.  (Must be built at run time because
  * shifted function addresses can't be represented in relocation records.)
@@ -196,6 +198,10 @@ void page_fault_handler(struct Trapframe *tf)
     printk("Page fault @ %p\n", rcr2());
     while (1);
 }
+
+extern void kbd_isr_func();
+extern void timer_isr_func();
+extern void page_fault();
 
 void trap_init()
 {

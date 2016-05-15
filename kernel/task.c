@@ -166,7 +166,7 @@ int task_create()
 	else
 		ts->parent_id = -1;
 
-	ts->remind_ticks = 0;
+	ts->remind_ticks = TIME_QUANT;
 	ts->state = TASK_RUNNABLE;
 
 	return ts->task_id;
@@ -217,6 +217,8 @@ void sys_kill(int pid)
    * Free the memory
    * and invoke the scheduler for yield
    */
+		if(tasks[pid].state == TASK_FREE || tasks[pid].state == TASK_STOP)
+			return;
 		tasks[pid].state = TASK_STOP;
 		task_free(pid);	
 		sched_yield();
