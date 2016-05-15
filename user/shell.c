@@ -15,15 +15,24 @@ int mem_stat(int argc, char **argv);
 int print_tick(int argc, char **argv);
 int chgcolor(int argc, char **argv);
 int forktest(int argc, char **argv);
+int get_cur_pid(int argc, char **argv);
 
 struct Command commands[] = {
   { "help", "Display this list of commands", mon_help },
   { "mem_stat", "Show current usage of physical memory", mem_stat },
   { "print_tick", "Display system tick", print_tick },
   { "chgcolor", "Change screen text color", chgcolor },
-  { "forktest", "Test functionality of fork()", forktest }
+  { "forktest", "Test functionality of fork()", forktest },
+  { "getpid", "Get current task pid", get_cur_pid }
 };
 const int NCOMMANDS = (sizeof(commands)/sizeof(commands[0]));
+
+int get_cur_pid(int argc, char **argv)
+{
+	cprintf("pid = %d\n", getpid());
+
+	return 0;
+}
 
 int mem_stat(int argc, char **argv)
 {
@@ -104,8 +113,6 @@ static int runcmd(char *buf)
   return 0;
 }
 
-
-
 void task_job()
 {
 	int pid = 0;
@@ -140,6 +147,7 @@ int forktest(int argc, char **argv)
           task_job();
     }
   }
+	//task_job();
   /* task recycle */
   kill_self();
   return 0;

@@ -43,7 +43,7 @@ puts(const char *s, size_t len)
 	syscall(SYS_puts,(uint32_t)s, len, 0, 0, 0);
 }
 
-SYSCALL_NOARG(getc, int)
+SYSCALL_NOARG(getc, int);
 
 /* TODO: Lab 5
  * Please add interface needed for 
@@ -61,7 +61,7 @@ SYSCALL_NOARG(fork, int32_t);
 void
 kill_self()
 {
-	syscall(SYS_kill, 0, 0, 0, 0, 0);
+	syscall(SYS_kill, getpid(), 0, 0, 0, 0);
 }
 
 void

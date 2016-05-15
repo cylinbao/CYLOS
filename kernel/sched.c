@@ -42,22 +42,30 @@ void run_task(Task *task)
 void sched_yield(void)
 {
 	int i, idx;
+	Task *nextTask = NULL;
 
-	/* start from the next task */
-	if(cur_task != NULL){
-		idx = cur_task->task_id + 1;
+	if(cur_task){
+		/* start from the next task */
+		idx = (cur_task->task_id + 1) % NR_TASKS;
 
 		for(i = 0; i < NR_TASKS; i++){
+			if((tasks[idx].state == TASK_SLEEP) && (tasks[idx].remind_ticks <= 0))
+				tasks[idx].state = TASK_RUNNABLE;
 			/* if the next task is runnable, then switch to it */
-			if(tasks[idx].state == TASK_RUNNABLE)
-				run_task(&tasks[idx]);
+			if(tasks[idx].state == TASK_RUNNABLE){
+				nextTask = &(tasks[idx]);
+				break;
+			}
+
 			idx = (idx + 1) % NR_TASKS;
 		}
 		
 		/* if no task is runnable and current task is still running 
 		 * then keep running the current task */
-		if(cur_task->state == TASK_RUNNING)
-			run_task(cur_task);
+		if((!nextTask) && (cur_task->state == TASK_RUNNING))
+			nextTask = cur_task;
+
+		run_task(nextTask);
 	}
 	else
 		panic("no task to be scheduled\n");

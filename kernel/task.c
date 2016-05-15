@@ -71,7 +71,7 @@ extern void sched_yield(void);
 
 int sys_getpid()
 {
-	if(cur_task != NULL)
+	if(cur_task)
 		return cur_task->task_id;
 	else
 		return -1;
@@ -192,19 +192,16 @@ int task_create()
  */
 static void task_free(int pid)
 {
-	Task *ts = NULL;
+	Task *ts = &tasks[pid];
 	int i;
-
-	ts = &tasks[pid];
 
 	if(pid > 0 && pid < NR_TASKS){
 		// change the page directory to kernel's page directory
 		lcr3(PADDR(kern_pgdir));	
 
 		// remove pages of USER STACK
-		for(i = USTACKTOP - USR_STACK_SIZE; i <= USTACKTOP; i += PGSIZE){
+		for(i = USTACKTOP - USR_STACK_SIZE; i < USTACKTOP; i += PGSIZE)
 			page_remove(ts->pgdir, (void *) i);
-		}
 
 		ptable_remove(ts->pgdir);
 		pgdir_remove(ts->pgdir);
@@ -220,7 +217,7 @@ void sys_kill(int pid)
    * Free the memory
    * and invoke the scheduler for yield
    */
-		tasks[pid].state = TASK_FREE;
+		tasks[pid].state = TASK_STOP;
 		task_free(pid);	
 		sched_yield();
 	}
@@ -253,45 +250,45 @@ void sys_kill(int pid)
 int sys_fork()
 {
   /* pid for newly created process */
-  int pid, i, id;
-	struct PageInfo *ppageOld, *ppageNew;
+  int pid, i;
+	struct PageInfo *ppageNew;
+	uint32_t kvaNew;
+	Task *childTask;
 
-	id = cur_task->task_id;
-
-	// create an empty task
-	if(!(pid = task_create()))
-		return -1;
-
-	// copy the Trapframe
-	memcpy(&(tasks[pid].tf), &(cur_task->tf), sizeof(struct Trapframe));
-
-	pte_t *pte;
-	// copy stack
-	for(i = USTACKTOP - USR_STACK_SIZE; i <= USTACKTOP; i += PGSIZE){
-		ppageOld = page_lookup(cur_task->pgdir, (void *) i, &pte);	
-		ppageNew = page_lookup(tasks[pid].pgdir, (void *) i, &pte);	
-		if((ppageOld != NULL) && (ppageNew != NULL)){
-			uint32_t *kvaOld = (uint32_t *) page2kva(ppageOld);
-			uint32_t *kvaNew = (uint32_t *) page2kva(ppageNew);
-			memcpy(kvaNew, kvaOld, PGSIZE);
-		}
-		else
+	if((uint32_t) cur_task){
+		// create an empty task
+		if(!(pid = task_create()))
 			return -1;
-	}
 
-	if ((uint32_t)cur_task)
-	{
-    /* Step 4: All user program use the same code for now */
-    setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-    setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-    setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-    setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-	}
-	
-	// clear eax for child, so fork will return 0 in child
-	tasks[pid].tf.tf_regs.reg_eax = 0;
+		childTask = &(tasks[pid]);
 
-	return pid;
+		// copy the Trapframe
+		memcpy(&(childTask->tf), &(cur_task->tf), sizeof(struct Trapframe));
+
+		// copy stack
+		for(i = USTACKTOP - USR_STACK_SIZE; i < USTACKTOP; i += PGSIZE){
+			ppageNew = page_lookup(childTask->pgdir, (void *) i, NULL);	
+			if(ppageNew != NULL){
+				kvaNew = (uint32_t) page2kva(ppageNew);
+				memcpy(kvaNew, i, PGSIZE);
+			}
+			else
+				return -1;
+		}
+
+		/* Step 4: All user program use the same code for now */
+		setupvm(childTask->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+		setupvm(childTask->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+		setupvm(childTask->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+		setupvm(childTask->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+
+		// clear eax for child, so fork will return 0 in child
+		childTask->tf.tf_regs.reg_eax = 0;
+
+		return pid;
+	}
+	else
+		return -1;
 }
 
 /* TODO: Lab5

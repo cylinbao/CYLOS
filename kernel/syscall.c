@@ -118,6 +118,7 @@ static void syscall_handler(struct Trapframe *tf)
    * HINT: You have to know where to put the return value
    */
 
+	/* Still do not understand the order */ 
 	int32_t retVal; // retVal will represent error number
 	uint32_t syscallno, a1, a2, a3, a4, a5;
 	syscallno = tf->tf_regs.reg_eax;
